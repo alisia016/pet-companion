@@ -1,0 +1,19 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: transparent;
+}
+
+#pet-container {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    width: 250px;
+    cursor: pointer;
+}
+
+video {
+    width: 100%;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+}
