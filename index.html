@@ -4,102 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Whitebell Studio - Universal Pet Widget</title>
-    
-    <!-- Socket.io for Streamlabs Connection -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"></script>
 
     <style>
-        /* Base styling for transparent background in OBS */
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: transparent;
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background: transparent;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
         }
 
-        /* -------------------------------------------------- */
-        /* DASHBOARD UI SETUP */
-        /* -------------------------------------------------- */
         #dashboard-ui {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            z-index: 999;
-            background: rgba(255, 240, 245, 0.95); /* Whitebell Pastel Pink */
-            border: 2px solid #e0b0ff; /* Lavender */
-            border-radius: 12px;
-            padding: 20px;
+            position: absolute; top: 20px; left: 20px; z-index: 999;
+            background: rgba(255, 240, 245, 0.95); border: 2px solid #e0b0ff;
+            border-radius: 12px; padding: 20px; max-width: 320px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            max-width: 320px;
         }
-        #dashboard-ui h3 { margin-top: 0; margin-bottom: 5px; color: #7b1fa2; }
+        #dashboard-ui h3 { margin: 0 0 5px 0; color: #7b1fa2; }
         .desc-text { font-size: 12px; color: #555; margin-bottom: 15px; }
-        .section-title { font-size: 11px; font-weight: bold; color: #7b1fa2; margin-top: 15px; margin-bottom: 5px; }
+        .section-title { font-size: 11px; font-weight: bold; color: #7b1fa2; margin: 15px 0 5px 0; }
         
         .btn {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            margin: 6px 0;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            text-align: center;
-            transition: 0.2s;
-            box-sizing: border-box;
+            display: block; width: 100%; padding: 10px; margin: 6px 0;
+            border: none; border-radius: 6px; cursor: pointer;
+            font-weight: bold; text-align: center; transition: 0.2s; box-sizing: border-box;
         }
-        .btn-connect { background: #7b1fa2; color: white; }
+        .btn-connect { background: #7b1fa2; color: white; text-decoration: none; }
         .btn-connect:hover { background: #8e24aa; }
         .btn-test { background: #e0b0ff; color: #4a0072; }
         .btn-test:hover { background: #d291ff; }
 
-        .info-box {
-            font-size: 10px; 
-            color: #444; 
-            background: #eee; 
-            padding: 8px; 
-            border-radius: 6px;
-            word-break: break-all;
-        }
+        .info-box { font-size: 10px; color: #444; background: #eee; padding: 8px; border-radius: 6px; word-break: break-all; }
 
-        /* -------------------------------------------------- */
-        /* PET CONTAINER */
-        /* -------------------------------------------------- */
         #pet-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 300px; 
-            height: 300px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            pointer-events: auto; 
+            position: fixed; bottom: 20px; right: 20px;
+            width: 300px; height: 300px; display: flex;
+            justify-content: center; align-items: center; pointer-events: auto; 
         }
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
+        video { width: 100%; height: 100%; object-fit: contain; }
     </style>
 </head>
 <body>
 
-    <!-- Dashboard Configuration Panel -->
     <div id="dashboard-ui">
         <h3>🦋 Whitebell Setup</h3>
         <p class="desc-text">Choose your platform to connect or simulate pet movements before going live.</p>
         
-        <!-- OPTION 1: STREAMLABS (Twitch / YouTube) -->
         <p class="section-title">1. Twitch / YouTube (Streamlabs):</p>
-        <!-- REPLACE 'YOUR_CLIENT_ID_HERE' WITH YOUR ACTUAL STREAMLABS CLIENT ID -->
-        <a href="https://streamlabs.com/api/v1.0/authorize?client_id=YOUR_CLIENT_ID_HERE&redirect_uri=https://pet-companion-bay.vercel.app/&response_type=code&scope=alerts.read+donations.read+socket.token" class="btn btn-connect" style="text-decoration: none;">🔗 Connect Streamlabs</a>
+        <a href="https://streamlabs.com/api/v1.0/authorize?client_id=YOUR_CLIENT_ID_HERE&redirect_uri=https://pet-companion-bay.vercel.app/&response_type=code&scope=alerts.read+donations.read+socket.token" class="btn btn-connect">🔗 Connect Streamlabs</a>
 
-        <!-- OPTION 2: INDOFINITY (TikTok) -->
         <p class="section-title">2. TikTok (Indofinity Alert Links):</p>
         <div class="info-box">
             Paste these links directly into your Indofinity Media URL:<br><br>
@@ -110,14 +62,12 @@
 
         <hr style="border: 0; border-top: 1px solid #e0b0ff; margin: 15px 0;">
         
-        <!-- SIMULATION PANEL -->
         <p class="section-title">🎯 SIMULATION PANEL:</p>
         <button class="btn btn-test" onclick="runTest('follow')">❤️ Test Follow</button>
         <button class="btn btn-test" onclick="runTest('gift')">🪙 Test Gift</button>
         <button class="btn btn-test" onclick="runTest('subscribe')">⭐ Test Subscribe</button>
     </div>
 
-    <!-- The Pet Character -->
     <div id="pet-container" onclick="triggerClick()">
         <video id="pet-video" autoplay loop muted playsinline>
             <source id="video-source" src="idle.webm" type="video/webm">
@@ -127,24 +77,24 @@
     <script>
         const petVideo = document.getElementById('pet-video');
         const dashboard = document.getElementById('dashboard-ui');
+        const petContainer = document.getElementById('pet-container');
 
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
         const anim = urlParams.get('anim');
-        const streamlabsCode = urlParams.get('code'); // Catch Streamlabs Auth Code
+        const streamlabsCode = urlParams.get('code');
 
-        // 1. MULTI-TOKEN SECURITY (Whitebell Studio License List)
+        // 1. MULTI-TOKEN SECURITY
         const validTokens = ['meong123', 'WB001', 'WB002', 'WB003']; 
         if (!validTokens.includes(token) && !streamlabsCode) {
             document.body.innerHTML = "<h2 style='color:white; text-align:center; font-family:sans-serif; margin-top:20%;'>Access Denied: Invalid Whitebell Token!</h2>"; 
         }
 
-        // 2. OBS DETECTION (Hide dashboard when opened inside OBS Studio)
+        // 2. OBS DETECTION
         if (window.obsStudio) {
             dashboard.style.display = 'none';
         }
 
-        // Play WebM Animation Function
         let isPlaying = false;
         function playAnim(file, duration) {
             if (isPlaying) return;
@@ -154,7 +104,6 @@
             petVideo.loop = false;
             petVideo.play();
 
-            // Return to Idle after animation finishes
             setTimeout(() => {
                 petVideo.src = 'idle.webm';
                 petVideo.loop = true;
@@ -163,23 +112,31 @@
             }, duration);
         }
 
-        // 3. INDOFINITY LOGIC (Read URL Parameter)
+        // --- SISTEM WALKIE-TALKIE (BROADCAST CHANNEL) ---
+        const alertChannel = new BroadcastChannel('whitebell_alerts');
+
         if (anim) {
-            dashboard.style.display = 'none'; // Auto-hide dashboard for alert URLs
+            // JIKA INI ADALAH LINK INDOFINITY:
+            // Sembunyikan semuanya agar tidak bertumpuk di OBS
+            dashboard.style.display = 'none';
+            petContainer.style.display = 'none'; 
+            document.body.style.display = 'none';
 
-            if (anim === 'follow') {
-                playAnim('subscribe.webm', 4000); 
-            } else if (anim === 'gift') {
-                playAnim('gift.webm', 8000);      
-            } else if (anim === 'subscribe') {
-                playAnim('surprise.webm', 8000);  
-            }
-        }
-
-        // 4. STREAMLABS WEBSOCKET LOGIC (Placeholder for Twitch/YT)
-        if (streamlabsCode) {
-            console.log("Whitebell Log: Streamlabs authorized. Code: " + streamlabsCode);
-            // Developer Note: Exchange 'streamlabsCode' via backend to get Socket Token here
+            // Kirim sinyal gaib ke Link Utama
+            alertChannel.postMessage(anim);
+        } else {
+            // JIKA INI ADALAH LINK UTAMA (DI OBS):
+            // Dengarkan sinyal gaib dari Indofinity
+            alertChannel.onmessage = (event) => {
+                const command = event.data;
+                if (command === 'follow') {
+                    playAnim('subscribe.webm', 4000); 
+                } else if (command === 'gift') {
+                    playAnim('gift.webm', 8000);      
+                } else if (command === 'subscribe') {
+                    playAnim('surprise.webm', 8000);  
+                }
+            };
         }
 
         // 5. MANUAL CLICK INTERACTION
@@ -189,9 +146,9 @@
 
         // Helper function for dashboard test buttons
         function runTest(type) {
-            const currentToken = token || 'WB001';
-            // Open test animation in the same window
-            window.location.href = `?token=${currentToken}&anim=${type}`;
+            if (type === 'follow') playAnim('subscribe.webm', 4000);
+            else if (type === 'gift') playAnim('gift.webm', 8000);
+            else if (type === 'subscribe') playAnim('surprise.webm', 8000);
         }
     </script>
 </body>
