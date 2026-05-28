@@ -115,16 +115,24 @@
         // --- SISTEM WALKIE-TALKIE (BROADCAST CHANNEL) ---
         const alertChannel = new BroadcastChannel('whitebell_alerts');
 
-        if (anim) {
+                if (anim) {
             // JIKA INI ADALAH LINK INDOFINITY:
-            // Sembunyikan semuanya agar tidak bertumpuk di OBS
-            dashboard.style.display = 'none';
-            petContainer.style.display = 'none'; 
-            document.body.style.display = 'none';
-
-            // Kirim sinyal gaib ke Link Utama
+            // Kirim sinyal gaib ke Link Utama di OBS
             alertChannel.postMessage(anim);
-        } else {
+
+            // Ganti tampilan layar kosong menjadi Pesan Sukses Profesional
+            document.body.style.background = "#1a1a1a";
+            document.body.innerHTML = `
+                <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; color:white; font-family:'Segoe UI', sans-serif; text-align:center; padding:20px;">
+                    <h2 style="color:#e0b0ff; margin-bottom:5px;">🦋 Whitebell Studio</h2>
+                    <h3 style="color:#4caf50; margin-top:0;">✔️ Sinyal [ ${anim.toUpperCase()} ] Berhasil Dikirim!</h3>
+                    <p style="color:#aaa; font-size:14px; max-width:400px;">
+                        Link ini berfungsi dengan sempurna. Silakan masukkan link ini ke dalam kolom Media URL di <b>Indofinity</b> Anda.
+                    </p>
+                </div>
+            `;
+    
+            }else {
             // JIKA INI ADALAH LINK UTAMA (DI OBS):
             // Dengarkan sinyal gaib dari Indofinity
             alertChannel.onmessage = (event) => {
