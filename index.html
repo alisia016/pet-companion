@@ -4,160 +4,210 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Whitebell Studio - Universal Pet Widget</title>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"></script>
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 
     <style>
+        /* Base styling agar background transparan */
         body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            overflow: hidden; background: transparent;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: transparent;
         }
 
+        /* -------------------------------------------------- */
+        /* MUKA 1: DASHBOARD SETUP (Hanya muncul di Chrome Biasa) */
+        /* -------------------------------------------------- */
         #dashboard-ui {
-            position: absolute; top: 20px; left: 20px; z-index: 999;
-            background: rgba(255, 240, 245, 0.95); border: 2px solid #e0b0ff;
-            border-radius: 12px; padding: 20px; max-width: 320px;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 999;
+            background: rgba(255, 240, 245, 0.95); /* Tema Pastel Pink Whitebell */
+            border: 2px solid #e0b0ff; /* Lavender */
+            border-radius: 12px;
+            padding: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            max-width: 320px;
         }
-        #dashboard-ui h3 { margin: 0 0 5px 0; color: #7b1fa2; }
-        .desc-text { font-size: 12px; color: #555; margin-bottom: 15px; }
-        .section-title { font-size: 11px; font-weight: bold; color: #7b1fa2; margin: 15px 0 5px 0; }
-        
+        #dashboard-ui h3 { margin-top: 0; color: #7b1fa2; }
         .btn {
-            display: block; width: 100%; padding: 10px; margin: 6px 0;
-            border: none; border-radius: 6px; cursor: pointer;
-            font-weight: bold; text-align: center; transition: 0.2s; box-sizing: border-box;
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            text-align: center;
+            transition: 0.2s;
         }
-        .btn-connect { background: #7b1fa2; color: white; text-decoration: none; }
+        .btn-connect { background: #7b1fa2; color: white; }
         .btn-connect:hover { background: #8e24aa; }
         .btn-test { background: #e0b0ff; color: #4a0072; }
         .btn-test:hover { background: #d291ff; }
 
-        .info-box { font-size: 10px; color: #444; background: #eee; padding: 8px; border-radius: 6px; word-break: break-all; }
-
+        /* -------------------------------------------------- */
+        /* MUKA 2: RAGA PET (Muncul di Chrome & Terbaca di OBS) */
+        /* -------------------------------------------------- */
         #pet-container {
-            position: fixed; bottom: 20px; right: 20px;
-            width: 300px; height: 300px; display: flex;
-            justify-content: center; align-items: center; pointer-events: auto; 
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px; /* Sesuaikan dimensi raga pet kupu-kupu */
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto; /* Aktif agar bisa diklik lewat menu OBS Interact */
         }
-        video { width: 100%; height: 100%; object-fit: contain; }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
     </style>
 </head>
 <body>
 
     <div id="dashboard-ui">
         <h3>🦋 Whitebell Setup</h3>
-        <p class="desc-text">Choose your platform to connect or simulate pet movements before going live.</p>
+        <p style="font-size: 12px; color: #555;">Koneksikan akun streaming kamu atau lakukan uji coba simulasi gerakan pet sebelum live.</p>
         
-        <p class="section-title">1. Twitch / YouTube (Streamlabs):</p>
-        <a href="https://streamlabs.com/api/v1.0/authorize?client_id=YOUR_CLIENT_ID_HERE&redirect_uri=https://pet-companion-bay.vercel.app/&response_type=code&scope=alerts.read+donations.read+socket.token" class="btn btn-connect">🔗 Connect Streamlabs</a>
-
-        <p class="section-title">2. TikTok (Indofinity Alert Links):</p>
-        <div class="info-box">
-            Paste these links directly into your Indofinity Media URL:<br><br>
-            <strong>Follow:</strong> <code>https://pet-companion-bay.vercel.app/?token=WB001&anim=follow</code><br><br>
-            <strong>Gift:</strong> <code>https://pet-companion-bay.vercel.app/?token=WB001&anim=gift</code><br><br>
-            <strong>Subscribe:</strong> <code>https://pet-companion-bay.vercel.app/?token=WB001&anim=subscribe</code>
+        <button class="btn btn-connect" onclick="connectStreamlabs()">🔗 Connect Streamlabs (Twitch/YT)</button>
+        
+        <div style="font-size: 11px; margin: 10px 0; color: #666; word-break: break-all;">
+            <strong>Link Webhook untuk Indofinity (TikTok):</strong><br>
+            <code id="webhook-link" style="background:#eee; padding:2px; display:block; margin-top:3px;">https://api-whitebell.vercel.app/api/webhook?token=WB001</code>
         </div>
 
         <hr style="border: 0; border-top: 1px solid #e0b0ff; margin: 15px 0;">
         
-        <p class="section-title">🎯 SIMULATION PANEL:</p>
-        <button class="btn btn-test" onclick="runTest('follow')">❤️ Test Follow</button>
-        <button class="btn btn-test" onclick="runTest('gift')">🪙 Test Gift</button>
-        <button class="btn btn-test" onclick="runTest('subscribe')">⭐ Test Subscribe</button>
+        <p style="font-size: 11px; font-weight: bold; margin: 0; color: #7b1fa2;">🎯 PANEL SIMULASI (TES OBS):</p>
+        <button class="btn btn-test" onclick="simulateEvent('tiktok_follow')">❤️ Test Follow (Mata Love)</button>
+        <button class="btn btn-test" onclick="simulateEvent('tiktok_gift')">🪙 Test Gift (Mungut Koin)</button>
     </div>
 
-    <div id="pet-container" onclick="triggerClick()">
+    <div id="pet-container" onclick="triggerClickAnimation()">
         <video id="pet-video" autoplay loop muted playsinline>
             <source id="video-source" src="idle.webm" type="video/webm">
         </video>
     </div>
 
     <script>
-        const petVideo = document.getElementById('pet-video');
+        const videoElement = document.getElementById('pet-video');
+        const sourceElement = document.getElementById('video-source');
         const dashboard = document.getElementById('dashboard-ui');
-        const petContainer = document.getElementById('pet-container');
 
+        // --- 1. LOGIKA DETEKSI "DUA MUKA" AUTOMATIS ---
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token');
-        const anim = urlParams.get('anim');
-        const streamlabsCode = urlParams.get('code');
+        const hasToken = urlParams.has('token');
+        const isOBS = window.obsStudio || hasToken;
 
-        // 1. MULTI-TOKEN SECURITY
-        const validTokens = ['meong123', 'WB001', 'WB002', 'WB003']; 
-        if (!validTokens.includes(token) && !streamlabsCode) {
-            document.body.innerHTML = "<h2 style='color:white; text-align:center; font-family:sans-serif; margin-top:20%;'>Access Denied: Invalid Whitebell Token!</h2>"; 
+        if (isOBS) {
+            dashboard.style.display = 'none'; // Dashboard hilang total di OBS, tersisa pet transparan
         }
 
-        // 2. OBS DETECTION
-        if (window.obsStudio) {
-            dashboard.style.display = 'none';
-        }
+        // --- 2. LOGIKA STATE MACHINE / PENGGANTI VIDEO ANIMASI ---
+        let isPlayingAlert = false;
 
-        let isPlaying = false;
-        function playAnim(file, duration) {
-            if (isPlaying) return;
-            isPlaying = true;
+        function playAnimation(videoFile, durationMs) {
+            if (isPlayingAlert) return; 
             
-            petVideo.src = file;
-            petVideo.loop = false;
-            petVideo.play();
+            isPlayingAlert = true;
+            sourceElement.src = videoFile;
+            videoElement.load();
+            videoElement.loop = false; 
+            videoElement.play();
 
+            // Kembalikan ke video terbang santai (idle) setelah durasi selesai
             setTimeout(() => {
-                petVideo.src = 'idle.webm';
-                petVideo.loop = true;
-                petVideo.play();
-                isPlaying = false;
-            }, duration);
+                sourceElement.src = "idle.webm";
+                videoElement.load();
+                videoElement.loop = true;
+                videoElement.play();
+                isPlayingAlert = false;
+            }, durationMs);
         }
 
-        // --- SISTEM WALKIE-TALKIE (BROADCAST CHANNEL) ---
-        const alertChannel = new BroadcastChannel('whitebell_alerts');
+        // Fungsi pemicu animasi klik manual via OBS Interact
+        function triggerClickAnimation() {
+            playAnimation("click.webm", 3000); 
+        }
 
-                if (anim) {
-            // JIKA INI ADALAH LINK INDOFINITY:
-            // Kirim sinyal gaib ke Link Utama di OBS
-            alertChannel.postMessage(anim);
 
-            // Ganti tampilan layar kosong menjadi Pesan Sukses Profesional
-            document.body.style.background = "#1a1a1a";
-            document.body.innerHTML = `
-                <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; color:white; font-family:'Segoe UI', sans-serif; text-align:center; padding:20px;">
-                    <h2 style="color:#e0b0ff; margin-bottom:5px;">🦋 Whitebell Studio</h2>
-                    <h3 style="color:#4caf50; margin-top:0;">✔️ Sinyal [ ${anim.toUpperCase()} ] Berhasil Dikirim!</h3>
-                    <p style="color:#aaa; font-size:14px; max-width:400px;">
-                        Link ini berfungsi dengan sempurna. Silakan masukkan link ini ke dalam kolom Media URL di <b>Indofinity</b> Anda.
-                    </p>
-                </div>
-            `;
-    
-            }else {
-            // JIKA INI ADALAH LINK UTAMA (DI OBS):
-            // Dengarkan sinyal gaib dari Indofinity
-            alertChannel.onmessage = (event) => {
-                const command = event.data;
-                if (command === 'follow') {
-                    playAnim('subscribe.webm', 4000); 
-                } else if (command === 'gift') {
-                    playAnim('gift.webm', 8000);      
-                } else if (command === 'subscribe') {
-                    playAnim('surprise.webm', 8000);  
+        // --- 3. HUB INTERAKSI SINYAL (UNIVERSAL LISTENER) ---
+        window.addEventListener('message', (event) => {
+            if (event.data === 'tiktok_gift') {
+                playAnimation("gift.webm", 8000); // Gerakan meluk koin (8 detik)
+            } else if (event.data === 'tiktok_follow') {
+                playAnimation("subscribe.webm", 4000); // Gerakan mata love (4 detik)
+            }
+        });
+
+        // Trigger simulasi lokal dari dashboard browser
+        function simulateEvent(eventType) {
+            window.postMessage(eventType, '*');
+        }
+
+
+        // --- 4. AREA REALTIME WEBSOCKET & PUSHER (SUDAH JADI) ---
+        
+        // A. JALUR TWITCH / YOUTUBE (STREAMLABS)
+        function connectStreamlabs() {
+            const streamlabsToken = urlParams.get('sl_token');
+            if (!streamlabsToken) {
+                console.log("Whitebell Log: Menunggu user menghubungkan token Streamlabs.");
+                return;
+            }
+
+            // Membuka gerbang WebSocket ke Streamlabs
+            const streamlabs = io(`https://sockets.streamlabs.com?token=${streamlabsToken}`, { transports: ['websocket'] });
+
+            streamlabs.on('event', (eventData) => {
+                if (eventData.type === 'follow') {
+                    window.postMessage('tiktok_follow', '*');
                 }
-            };
+                if (eventData.type === 'donation' || eventData.type === 'subscription') {
+                    window.postMessage('tiktok_gift', '*');
+                }
+            });
         }
+        connectStreamlabs();
 
-        // 5. MANUAL CLICK INTERACTION
-        function triggerClick() {
-            playAnim('click.webm', 3000);
-        }
+        // B. JALUR TIKTOK (PUSHER UNTUK WEBHOOK INDOFINITY)
+        function connectTikTokWebhook() {
+            // ⚠️ TUGAS PARTNER: Isi dengan Key & Cluster akun Pusher kalian
+            const PUSHER_KEY = 'KUNCI_PUSHER_PARTNER_MU'; 
+            const PUSHER_CLUSTER = 'CLUSTER_PUSHER_PARTNER_MU';
 
-        // Helper function for dashboard test buttons
-        function runTest(type) {
-            if (type === 'follow') playAnim('subscribe.webm', 4000);
-            else if (type === 'gift') playAnim('gift.webm', 8000);
-            else if (type === 'subscribe') playAnim('surprise.webm', 8000);
+            if (PUSHER_KEY === 'KUNCI_PUSHER_PARTNER_MU') {
+                console.log("Whitebell Log: Pusher Key belum di-input oleh Developer.");
+                return;
+            }
+
+            // Membuka gerbang WebSocket ke Pusher
+            const pusher = new Pusher(PUSHER_KEY, {
+                cluster: PUSHER_CLUSTER
+            });
+
+            const channel = pusher.subscribe('whitebell-stream-channel');
+            channel.bind('new-alert', function(data) {
+                if (data.type === 'gift') {
+                    window.postMessage('tiktok_gift', '*');
+                } else if (data.type === 'follow') {
+                    window.postMessage('tiktok_follow', '*');
+                }
+            });
         }
+        connectTikTokWebhook();
+
     </script>
 </body>
 </html>
