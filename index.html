@@ -105,14 +105,14 @@
         const sourceElement = document.getElementById('video-source');
         const dashboard = document.getElementById('dashboard-ui');
 
-        // --- 1. LOGIKA DETEKSI "DUA MUKA" AUTOMATIS ---
-        const urlParams = new URLSearchParams(window.location.search);
-        const hasToken = urlParams.has('token');
-        const isOBS = window.obsStudio || hasToken;
+        // --- 1. LOGIKA DETEKSI "DUA MUKA" YANG SUDAH DIPERBAIKI ---
+const urlParams = new URLSearchParams(window.location.search);
+const mode = urlParams.get('mode'); // Membaca tulisan &mode=
 
-        if (isOBS) {
-            dashboard.style.display = 'none'; // Dashboard hilang total di OBS, tersisa pet transparan
-        }
+// Dasbor HANYA akan hilang jika dibuka di OBS Studio ATAU ada tulisan &mode=widget
+if (window.obsStudio || mode === 'widget') {
+    dashboard.style.display = 'none'; // Sembunyikan dasbor, sisa pet transparan
+}
 
         // --- 2. LOGIKA STATE MACHINE / PENGGANTI VIDEO ANIMASI ---
         let isPlayingAlert = false;
